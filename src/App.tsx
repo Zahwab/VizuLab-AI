@@ -31,8 +31,14 @@ function App() {
         content: `Generated simulation for: "${input}"`
       };
       setMessages(prev => [...prev, systemMsg]);
-    } catch (error: any) {
-      const errorMsg: Message = { role: 'system', content: `Error: ${error.message || "Failed to generate"}` };
+    } catch (error: unknown) {
+      let errorMessage = "Failed to generate";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      const errorMsg: Message = { role: 'system', content: `Error: ${errorMessage}` };
       setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
@@ -41,8 +47,8 @@ function App() {
 
   return (
     <Layout>
-      {/* Left Panel: Visualization (70%) */}
-      <div className="flex-[7] flex flex-col gap-4 min-h-0">
+      {/* Left Panel: Visualization (70% desktop, auto mobile) */}
+      <div className="flex-1 lg:flex-[7] flex flex-col gap-4 min-h-[500px] lg:min-h-0">
         <div className="flex items-center justify-between px-2 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-500/20 rounded-lg border border-indigo-500/30">
@@ -55,13 +61,13 @@ function App() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 shadow-2xl rounded-xl overflow-hidden">
           <SimulationViewer codeString={codeString} />
         </div>
       </div>
 
-      {/* Right Panel: Chat (30%) */}
-      <div className="flex-[3] min-w-[350px] flex flex-col min-h-0">
+      {/* Right Panel: Chat (30% desktop, fixed height mobile) */}
+      <div className="flex-1 lg:flex-[3] w-full lg:min-w-[350px] flex flex-col min-h-[500px] lg:min-h-0">
         <ChatInterface
           messages={messages}
           onSendMessage={handleSendMessage}

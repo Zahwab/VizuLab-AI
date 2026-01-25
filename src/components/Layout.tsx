@@ -7,7 +7,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
     return (
         <div className="min-h-screen bg-background text-white p-4 font-sans selection:bg-purple-500/30">
-            <div className="max-w-[1920px] mx-auto h-[calc(100vh-2rem)] flex gap-4">
+            <div className="max-w-[1920px] mx-auto min-h-[calc(100vh-2rem)] lg:h-[calc(100vh-2rem)] flex flex-col lg:flex-row gap-4">
                 {children}
             </div>
 

@@ -17,6 +17,8 @@ graph TD
     Layout --> ChatInterface
     ChatInterface --> "Messages UI (Internal)"
     ChatInterface --> "Input Form (Internal)"
+    App -- invokes --> LLMService["lib/llm.ts"]
+    LLMService -- calls --> PuterAPI["Puter.js API"]
     SimulationViewer --> IframeRenderer
 ```
 

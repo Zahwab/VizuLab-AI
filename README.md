@@ -36,9 +36,21 @@ Powered by a Large Language Model (LLM), VizuLab AI instantly writes and renders
    npm run dev
    ```
 
-4. **Open in Browser**
+4. **Building for Production**
+   To create a production build:
+   ```bash
+   npm run build
+   ```
+
+5. **Linting**
+   To check for code quality issues:
+   ```bash
+   npm run lint
+   ```
+
+6. **Open in Browser**
    Navigate to `http://localhost:5173` (or the port shown in your terminal).
 
-5. **Start Generating**
+7. **Start Generating**
    - No API key required! The app uses specific integration for generic users.
    - Simply type a prompt and hit send.

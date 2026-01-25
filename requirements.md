@@ -16,6 +16,7 @@
 - [x] **No API Key Required**: Leverages Puter.js environment (no user API key needed).
 - [x] **Safe Rendering**: Isolates generated code using `iframe` with `sandbox`.
 - [x] **Error Handling**: Graceful handling of generation failures.
+- [x] **Type Safety**: Strict TypeScript configuration with no explicit `any`.
 
 ## 4. Documentation
 - [x] **Architecture & Design**: Documented in `design.md`.
