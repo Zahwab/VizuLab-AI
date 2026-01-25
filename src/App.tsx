@@ -49,7 +49,7 @@ function App() {
               <Atom className="text-indigo-400" size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-bold font-mono tracking-tight text-white">VizuLab AI</h1>
+              <h1 className="text-xl font-bold font-mono tracking-tight text-white">VizuLab</h1>
               <p className="text-xs text-slate-400 font-mono">GENERATIVE SIMULATION ENGINE</p>
             </div>
           </div>

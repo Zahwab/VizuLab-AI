@@ -9,7 +9,7 @@
 - [x] **Branding**: "VizuLab AI" name and logo.
 - [x] **Modern & Premium**: Dark, sleek, glassmorphism-inspired design (Slate/Purple theme).
 - [x] **Chat Interface**: Chat-like input for providing prompts and viewing system status.
-- [ ] **Code View**: Option to view the generated source code (Currently missing).
+- [x] **Code View**: Option to view and copy the generated source code.
 
 ## 3. Technical Requirements
 - [x] **LLM Integration**: Uses **Puter.js** to access Gemini 2.5 Flash.

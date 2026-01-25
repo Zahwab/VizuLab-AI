@@ -22,7 +22,7 @@ graph TD
 
 - **App**: Root component, manages state `messages` and `codeString`.
 - **Layout**: Handles the responsive split-screen grid.
-- **SimulationViewer**: Receives `codeString` and renders it safely in an iframe. Shows a loading spinner when empty.
+- **SimulationViewer**: Receives `codeString` and renders it safely in an iframe. Includes a toggle to view and copy the raw source code. Shows a loading spinner when empty.
 - **ChatInterface**: Manages user input, displays chat history, and handles "Quick Start" suggestions.
 - **lib/llm.ts**: Handles the async call to `puter.ai.chat`.
 

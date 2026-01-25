@@ -39,12 +39,10 @@ Powered by a Large Language Model (LLM), VizuLab AI instantly writes and renders
 4. **Open in Browser**
    Navigate to `http://localhost:5173` (or the port shown in your terminal).
 
-5. **API Key Setup**
-   - Click the "Settings" or "API Key" button in the UI.
-   - Enter your Google Gemini API Key.
-   - Start generating!
+5. **Start Generating**
+   - No API key required! The app uses specific integration for generic users.
+   - Simply type a prompt and hit send.
 
 ## License
 
 MIT
-
