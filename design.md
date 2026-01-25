@@ -11,15 +11,83 @@ The application is a client-side Single Page Application (SPA) built with React.
 
 ## 2. Component Structure
 ```mermaid
-graph TD
-    App --> Layout
-    Layout --> SimulationViewer
-    Layout --> ChatInterface
-    ChatInterface --> MessagesUI["Messages UI (Internal)"]
-    ChatInterface --> InputForm["Input Form (Internal)"]
-    App -- invokes --> LLMService["lib/llm.ts"]
-    LLMService -- calls --> PuterAPI["Puter.js API"]
-    SimulationViewer --> IframeRenderer
+graph TB
+    subgraph Client ["Client Workstation"]
+        style Client fill:#f9f9f9,stroke:#333,stroke-width:2px
+        User([User])
+
+        subgraph Browser ["Web Browser"]
+            style Browser fill:#ffffff,stroke:#666
+
+            subgraph Application ["VizuLab AI (React SPA)"]
+                style Application fill:#e1f5fe,stroke:#01579b
+
+                subgraph UI_Layer ["Presentation Layer"]
+                    style UI_Layer fill:#e3f2fd,stroke:#2196f3
+                    AppComp["App.tsx (Main Container)"]
+                    LayoutComp["Layout Component"]
+                    ChatComp["ChatInterface"]
+                    SimComp["SimulationViewer"]
+                end
+
+                subgraph Logic_Layer ["Logic Layer"]
+                    style Logic_Layer fill:#fff3e0,stroke:#ff9800
+                    StateMgmt["React State (Messages, Code)"]
+                    LLMService["src/lib/llm.ts"]
+                end
+
+                subgraph Isolation ["Sand/box Layer"]
+                    style Isolation fill:#fbe9e7,stroke:#ff5722
+                    Iframe["Sandboxed Iframe"]
+                end
+            end
+        end
+    end
+
+    subgraph Cloud ["Cloud Services"]
+        style Cloud fill:#f3e5f5,stroke:#4a148c
+        PuterBridge["Puter.js Bridge"]
+        GeminiFlash["Gemini 2.5 Flash Model"]
+    end
+
+    %% Interactions
+    User -->|1. Enters Prompt| ChatComp
+    ChatComp -->|2. Updates State| AppComp
+    AppComp -->|3. Triggers Generation| LLMService
+    LLMService -->|4. API Call| PuterBridge
+    PuterBridge -->|5. Inference Request| GeminiFlash
+    GeminiFlash -->|6. Returns HTML/JS Code| PuterBridge
+    PuterBridge -->|7. Returns Response| LLMService
+    LLMService -->|8. Returns Code| AppComp
+    AppComp -->|9. Passes Code| SimComp
+    SimComp -->|10. Injects into| Iframe
+    Iframe -->|11. Renders Visualization| User
+```
+
+### Component Interaction Flow
+```mermaid
+sequenceDiagram
+    participant User
+    participant ChatInterface
+    participant App
+    participant LLMService
+    participant PuterAPI
+    participant SimulationViewer
+
+    User->>ChatInterface: Types prompt & clicks Send
+    ChatInterface->>App: onSendMessage(prompt)
+    App->>App: setMessages(userMsg)
+    App->>App: setIsLoading(true)
+    App->>LLMService: generateSimulation(prompt)
+    LLMService->>PuterAPI: puter.ai.chat(prompt)
+    PuterAPI-->>LLMService: Returns generated code string
+    LLMService-->>App: Returns code
+    App->>App: setCodeString(code)
+    App->>App: setMessages(systemMsg)
+    App->>App: setIsLoading(false)
+    App->>SimulationViewer: passes codeString
+    SimulationViewer->>SimulationViewer: Injects code into iframe srcdoc
+    SimulationViewer-->>User: Displays rendered simulation
 ```
 
 - **App**: Root component, manages state `messages` and `codeString`.
