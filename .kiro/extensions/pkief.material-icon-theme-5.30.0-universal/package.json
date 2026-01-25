@@ -1,0 +1,498 @@
+{
+	"name": "material-icon-theme",
+	"displayName": "Material Icon Theme",
+	"description": "Material Design Icons for Visual Studio Code",
+	"version": "5.30.0",
+	"license": "MIT",
+	"scripts": {
+		"precompile": "rimraf dist && bun run verify",
+		"compile": "tsc -p ./",
+		"compile:declarations": "tsc -p ./tsconfig.declarations.json",
+		"postcompile": "bun run compile:declarations && bun run generateJson && bun run generateClones && bun run check",
+		"build": "bun run compile && bun ./build/build-with-esbuild.ts",
+		"watch": "bun ./build/watch-with-esbuild.ts",
+		"check-colors": "bun ./src/scripts/svg/checkSvgColors.ts",
+		"check": "bun ./src/scripts/icons/checks/run.ts",
+		"contributors": "bun ./src/scripts/contributors/contributors.ts",
+		"generateJson": "bun ./src/scripts/icons/generateJson.ts > ./dist/material-icons.json",
+		"generateClones": "bun ./src/scripts/icons/generateClones.ts",
+		"lint": "biome check",
+		"markdownlint": "markdownlint '**/*.md'",
+		"format": "biome format --write ./src",
+		"preversion": "bun run contributors && bun run preview && bun run svgo && git add images/*.png icons/*.svg",
+		"preview": "bun ./src/scripts/preview/run.ts",
+		"svgo": "svgo -i icons -o icons -q",
+		"test": "bun test",
+		"vscode:prepublish": "bun run lint && bun run build",
+		"verify": "sheriff verify",
+		"prepublishOnly": "bun ./src/scripts/module/prepare.ts",
+		"postpublish": "git checkout package.json && git checkout README.md",
+		"prepare": "husky"
+	},
+	"publisher": "PKief",
+	"author": {
+		"name": "Material Extensions",
+		"email": "material-icons-extensions@googlegroups.com",
+		"url": "https://github.com/material-extensions"
+	},
+	"funding": "https://github.com/sponsors/material-extensions",
+	"sponsor": {
+		"url": "https://github.com/sponsors/material-extensions"
+	},
+	"engines": {
+		"vscode": "^1.55.0"
+	},
+	"homepage": "https://github.com/material-extensions/vscode-material-icon-theme/blob/main/README.md",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/material-extensions/vscode-material-icon-theme.git"
+	},
+	"bugs": {
+		"url": "https://github.com/material-extensions/vscode-material-icon-theme/issues"
+	},
+	"icon": "logo.png",
+	"galleryBanner": {
+		"color": "#282c34",
+		"theme": "dark"
+	},
+	"categories": [
+		"Themes"
+	],
+	"keywords": [
+		"icons",
+		"theme",
+		"material",
+		"icon-theme",
+		"customization"
+	],
+	"extensionKind": [
+		"ui",
+		"workspace"
+	],
+	"capabilities": {
+		"untrustedWorkspaces": {
+			"supported": true
+		},
+		"virtualWorkspaces": true
+	},
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"main": "./dist/extension/desktop/extension.cjs",
+	"browser": "./dist/extension/web/extension.cjs",
+	"module": "./dist/module/index.cjs",
+	"types": "./dist/types/module/index.d.ts",
+	"sideEffects": false,
+	"contributes": {
+		"iconThemes": [
+			{
+				"id": "material-icon-theme",
+				"label": "Material Icon Theme",
+				"path": "./dist/material-icons.json",
+				"_watch": true
+			}
+		],
+		"commands": [
+			{
+				"command": "material-icon-theme.activateIcons",
+				"title": "%command.activateIcons%",
+				"enablement": "!isWeb"
+			},
+			{
+				"command": "material-icon-theme.toggleIconPacks",
+				"title": "%command.toggleIconPacks%",
+				"enablement": "!isWeb"
+			},
+			{
+				"command": "material-icon-theme.changeFolderTheme",
+				"title": "%command.changeFolderTheme%",
+				"enablement": "!isWeb"
+			},
+			{
+				"command": "material-icon-theme.changeFolderColor",
+				"title": "%command.changeFolderColor%",
+				"enablement": "!isWeb"
+			},
+			{
+				"command": "material-icon-theme.changeRootFolderColor",
+				"title": "%command.changeRootFolderColor%",
+				"enablement": "!isWeb"
+			},
+			{
+				"command": "material-icon-theme.changeFileColor",
+				"title": "%command.changeFileColor%",
+				"enablement": "!isWeb"
+			},
+			{
+				"command": "material-icon-theme.restoreDefaultConfig",
+				"title": "%command.restoreDefaultConfig%",
+				"enablement": "!isWeb"
+			},
+			{
+				"command": "material-icon-theme.toggleExplorerArrows",
+				"title": "%command.toggleExplorerArrows%",
+				"enablement": "!isWeb"
+			},
+			{
+				"command": "material-icon-theme.changeOpacity",
+				"title": "%command.changeOpacity%",
+				"enablement": "!isWeb"
+			},
+			{
+				"command": "material-icon-theme.toggleGrayscale",
+				"title": "%command.toggleGrayscale%",
+				"enablement": "!isWeb"
+			},
+			{
+				"command": "material-icon-theme.changeSaturation",
+				"title": "%command.changeSaturation%",
+				"enablement": "!isWeb"
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "%configuration.title%",
+			"properties": {
+				"material-icon-theme.activeIconPack": {
+					"type": "string",
+					"default": "angular",
+					"description": "%configuration.activeIconPack%",
+					"enumDescriptions": [
+						"%configuration.activeIconPack.angular%",
+						"%configuration.activeIconPack.angular_ngrx%",
+						"%configuration.activeIconPack.react%",
+						"%configuration.activeIconPack.react_redux%",
+						"%configuration.activeIconPack.roblox%",
+						"%configuration.activeIconPack.qwik%",
+						"%configuration.activeIconPack.vue%",
+						"%configuration.activeIconPack.vue_vuex%",
+						"%configuration.activeIconPack.nest%",
+						"%configuration.activeIconPack.bashly%",
+						"%configuration.activeIconPack.none%"
+					],
+					"enum": [
+						"angular",
+						"angular_ngrx",
+						"react",
+						"react_redux",
+						"roblox",
+						"qwik",
+						"vue",
+						"vue_vuex",
+						"nest",
+						"bashly",
+						"none"
+					]
+				},
+				"material-icon-theme.files.associations": {
+					"type": "object",
+					"default": {},
+					"description": "%configuration.files.associations%"
+				},
+				"material-icon-theme.folders.associations": {
+					"type": "object",
+					"default": {},
+					"description": "%configuration.folders.associations%"
+				},
+				"material-icon-theme.rootFolders.associations": {
+					"type": "object",
+					"default": {},
+					"description": "%configuration.rootFolders.associations%"
+				},
+				"material-icon-theme.languages.associations": {
+					"type": "object",
+					"default": {},
+					"description": "%configuration.languages.associations%"
+				},
+				"material-icon-theme.files.customClones": {
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"description": "%configuration.customClones.name%"
+							},
+							"base": {
+								"type": "string",
+								"description": "%configuration.customClones.base%"
+							},
+							"color": {
+								"type": "string",
+								"description": "%configuration.customClones.color%"
+							},
+							"lightColor": {
+								"type": "string",
+								"description": "%configuration.customClones.lightColor%"
+							},
+							"fileNames": {
+								"type": "array",
+								"default": [],
+								"description": "%configuration.customClones.fileNames%",
+								"items": {
+									"type": "string"
+								}
+							},
+							"fileExtensions": {
+								"type": "array",
+								"default": [],
+								"description": "%configuration.customClones.fileExtensions%",
+								"items": {
+									"type": "string"
+								}
+							},
+							"activeForPacks": {
+								"type": "array",
+								"default": [
+									"angular"
+								],
+								"description": "%configuration.customClones.activeForPacks%",
+								"items": {
+									"type": "string",
+									"enumDescriptions": [
+										"%configuration.activeIconPack.angular%",
+										"%configuration.activeIconPack.angular_ngrx%",
+										"%configuration.activeIconPack.react%",
+										"%configuration.activeIconPack.react_redux%",
+										"%configuration.activeIconPack.roblox%",
+										"%configuration.activeIconPack.qwik%",
+										"%configuration.activeIconPack.vue%",
+										"%configuration.activeIconPack.vue_vuex%",
+										"%configuration.activeIconPack.nest%",
+										"%configuration.activeIconPack.bashly%",
+										"%configuration.activeIconPack.none%"
+									],
+									"enum": [
+										"angular",
+										"angular_ngrx",
+										"react",
+										"react_redux",
+										"qwik",
+										"vue",
+										"vue_vuex",
+										"nest",
+										"bashly",
+										"none"
+									]
+								}
+							}
+						}
+					},
+					"description": "%configuration.customClones%"
+				},
+				"material-icon-theme.languages.customClones": {
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"description": "%configuration.customClones.name%"
+							},
+							"base": {
+								"type": "string",
+								"description": "%configuration.customClones.base%"
+							},
+							"color": {
+								"type": "string",
+								"description": "%configuration.customClones.color%"
+							},
+							"lightColor": {
+								"type": "string",
+								"description": "%configuration.customClones.lightColor%"
+							},
+							"ids": {
+								"type": "array",
+								"default": [],
+								"description": "%configuration.customClones.ids%",
+								"items": {
+									"type": "string"
+								}
+							},
+							"activeForPacks": {
+								"type": "array",
+								"default": [
+									"angular"
+								],
+								"description": "%configuration.customClones.activeForPacks%",
+								"items": {
+									"type": "string",
+									"enumDescriptions": [
+										"%configuration.activeIconPack.angular%",
+										"%configuration.activeIconPack.angular_ngrx%",
+										"%configuration.activeIconPack.react%",
+										"%configuration.activeIconPack.react_redux%",
+										"%configuration.activeIconPack.roblox%",
+										"%configuration.activeIconPack.qwik%",
+										"%configuration.activeIconPack.vue%",
+										"%configuration.activeIconPack.vue_vuex%",
+										"%configuration.activeIconPack.nest%",
+										"%configuration.activeIconPack.bashly%",
+										"%configuration.activeIconPack.none%"
+									],
+									"enum": [
+										"angular",
+										"angular_ngrx",
+										"react",
+										"react_redux",
+										"qwik",
+										"vue",
+										"vue_vuex",
+										"nest",
+										"bashly",
+										"none"
+									]
+								}
+							}
+						}
+					},
+					"description": "%configuration.customClones%"
+				},
+				"material-icon-theme.folders.customClones": {
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"description": "%configuration.customClones.name%"
+							},
+							"base": {
+								"type": "string",
+								"description": "%configuration.customClones.base%"
+							},
+							"color": {
+								"type": "string",
+								"description": "%configuration.customClones.color%"
+							},
+							"lightColor": {
+								"type": "string",
+								"description": "%configuration.customClones.lightColor%"
+							},
+							"folderNames": {
+								"type": "array",
+								"description": "%configuration.customClones.folderNames%",
+								"items": {
+									"type": "string"
+								}
+							},
+							"rootFolderNames": {
+								"type": "array",
+								"description": "%configuration.customClones.rootFolderNames%",
+								"items": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"description": "%configuration.customClones%"
+				},
+				"material-icon-theme.folders.theme": {
+					"type": "string",
+					"default": "specific",
+					"description": "%configuration.folders.theme%",
+					"enumDescriptions": [
+						"%configuration.folders.theme.specific%",
+						"%configuration.folders.theme.classic%",
+						"%configuration.folders.theme.none%"
+					],
+					"enum": [
+						"specific",
+						"classic",
+						"none"
+					]
+				},
+				"material-icon-theme.folders.color": {
+					"type": "string",
+					"default": "#90a4ae",
+					"pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+					"description": "%configuration.folders.color%"
+				},
+				"material-icon-theme.rootFolders.color": {
+					"type": "string",
+					"default": "#90a4ae",
+					"pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+					"description": "%configuration.rootFolders.color%"
+				},
+				"material-icon-theme.files.color": {
+					"type": "string",
+					"default": "#90a4ae",
+					"pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+					"description": "%configuration.files.color%"
+				},
+				"material-icon-theme.opacity": {
+					"type": "number",
+					"default": 1,
+					"minimum": 0,
+					"maximum": 1,
+					"description": "%configuration.opacity%"
+				},
+				"material-icon-theme.hidesExplorerArrows": {
+					"type": "boolean",
+					"default": false,
+					"description": "%configuration.hidesExplorerArrows%"
+				},
+				"material-icon-theme.saturation": {
+					"type": "number",
+					"default": 1,
+					"minimum": 0,
+					"maximum": 1,
+					"description": "%configuration.saturation%"
+				},
+				"material-icon-theme.enableLogging": {
+					"type": "boolean",
+					"default": false,
+					"description": "%configuration.enableLogging%"
+				},
+				"material-icon-theme.logLevel": {
+					"type": "string",
+					"default": "info",
+					"enum": [
+						"info",
+						"error",
+						"debug"
+					],
+					"description": "%configuration.logLevel%"
+				}
+			}
+		}
+	},
+	"dependencies": {
+		"chroma-js": "^3.1.2",
+		"fast-deep-equal": "^3.1.3",
+		"svgson": "^5.3.1",
+		"events": "^3.3.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.4",
+		"@commitlint/config-conventional": "^20.0.0",
+		"@softarc/sheriff-core": "^0.19.1",
+		"@types/chroma-js": "^3.1.1",
+		"@types/puppeteer": "^7.0.4",
+		"@types/vscode": "~1.55.0",
+		"axios": "^1.11.0",
+		"bun-types": "^1.2.20",
+		"changelogen": "0.6.2",
+		"commitlint": "^20.0.0",
+		"esbuild": "^0.27.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.1.5",
+		"markdownlint-cli": "^0.45.0",
+		"puppeteer": "^24.16.1",
+		"rimraf": "^6.0.1",
+		"svg-color-linter": "^3.0.0",
+		"svgo": "^4.0.0",
+		"typescript": "^5.9.2"
+	},
+	"patchedDependencies": {
+		"changelogen@0.6.2": "patches/changelogen@0.6.2.patch"
+	},
+	"__metadata": {
+		"installedTimestamp": 1766451806848,
+		"targetPlatform": "universal",
+		"size": 1783060
+	}
+}

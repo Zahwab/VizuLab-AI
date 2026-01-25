@@ -42,7 +42,3 @@ Powered by a Large Language Model (LLM), VizuLab AI instantly writes and renders
 5. **Start Generating**
    - No API key required! The app uses specific integration for generic users.
    - Simply type a prompt and hit send.
-
-## License
-
-MIT
