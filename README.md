@@ -18,6 +18,13 @@ Powered by a Large Language Model (LLM), VizuLab AI instantly writes and renders
 - **Styling**: Tailwind CSS, Lucide React
 - **AI/LLM**: Integration with Google Gemini (or compatible LLMs)
 
+## Documentation
+
+*   [**User Guide**](./USER_GUIDE.md): How to use the app, tips, and examples.
+*   [**Developer Guide**](./DEVELOPER_GUIDE.md): Architecture, setup, and contribution.
+*   [**Troubleshooting**](./TROUBLESHOOTING.md): Solutions for common issues.
+*   [**Design Doc**](./design.md): In-depth system design.
+
 ## Getting Started
 
 1. **Clone the repository**
