@@ -18,14 +18,15 @@ export const generateSimulation = async (prompt: string): Promise<string> => {
   2. The HTML must be self-contained:
      - CSS in <style> tags.
      - JS in <script> tags.
-     - No external CSS/JS file references (unless using a CDN for libraries like Three.js, p5.js, D3.js, etc.).
-  3. Design Aesthetic:
+     - No external CSS/JS file references (unless using standard CDNs for libraries like Three.js, p5.js, D3.js, etc.).
+  3. Design & Layout:
+     - The visualization MUST take up the ENTIRE viewport (width: 100vw, height: 100vh).
+     - BODY must have margin: 0 and overflow: hidden.
      - Dark mode default (bg-slate-900 or black).
      - Modern, clean, and professional.
-     - Use Canvas API or WebGL/Three.js if appropriate for high-performance visuals.
   4. Interactivity:
      - Make it interactive if possible (mouse movement, clicks, etc.).
-     - handle window resizing.
+     - handle window resizing dynamically.
   5. Libraries:
      - You MAY use ES modules from CDNs (e.g., https://unpkg.com/three@0.160.0/build/three.module.js).
      - If using Three.js, use an importmap.
@@ -34,10 +35,10 @@ export const generateSimulation = async (prompt: string): Promise<string> => {
   `;
 
     try {
-        console.log("Sending request to Puter.js with model: gemini-2.5-flash");
+        // console.log("Sending request to Puter.js with model: gemini-2.5-flash");
         const response = await puter.ai.chat(systemPrompt, { model: 'gemini-2.5-flash' });
 
-        console.log("Puter.js Response:", response);
+        // console.log("Puter.js Response:", response);
 
         let generatedText = "";
 

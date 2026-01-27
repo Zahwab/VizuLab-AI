@@ -10,16 +10,33 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
     const [viewMode, setViewMode] = useState<'preview' | 'code'>('preview');
     const [copied, setCopied] = useState(false);
 
+    // Use test simulation if no code provided
+    const displayCode = codeString;
+
     useEffect(() => {
-        if (iframeRef.current && codeString && viewMode === 'preview') {
-            iframeRef.current.srcdoc = codeString;
+        if (iframeRef.current && displayCode && viewMode === 'preview') {
+            // Inject styles to force full viewport
+            const resetStyle = `<style>
+                body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; }
+                canvas { display: block; width: 100% !important; height: 100% !important; }
+            </style>`;
+
+            // Try to insert after <head> if it exists, otherwise prepend
+            let finalCode = displayCode;
+            if (finalCode.includes('<head>')) {
+                finalCode = finalCode.replace('<head>', '<head>' + resetStyle);
+            } else {
+                finalCode = resetStyle + finalCode;
+            }
+
+            iframeRef.current.srcdoc = finalCode;
         }
-    }, [codeString, viewMode]);
+    }, [displayCode, viewMode]);
 
     const handleCopy = async () => {
-        if (!codeString) return;
+        if (!displayCode) return;
         try {
-            await navigator.clipboard.writeText(codeString);
+            await navigator.clipboard.writeText(displayCode);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (err) {
@@ -28,15 +45,15 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
     };
 
     return (
-        <div className="w-full h-full bg-slate-900/60 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden shadow-2xl relative flex flex-col">
+        <div className="w-full flex-1 min-h-0 bg-slate-900/60 backdrop-blur-md rounded-xl overflow-hidden shadow-2xl relative flex flex-col">
             {/* Header */}
-            <div className="h-10 bg-slate-900/80 border-b border-white/10 flex items-center justify-between px-4 shrink-0 z-10 w-full">
+            <div className="h-10 bg-slate-900/80 flex items-center justify-between px-4 shrink-0 z-10 w-full">
                 <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
                     <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
                     <div className="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
                     <span className="text-xs text-slate-400 font-mono ml-3 tracking-wider">
-                        VIEWPORT // {viewMode === 'preview' ? 'RENDER_E01' : 'SOURCE_CODE'}
+                        VIEWPORT // {viewMode === 'preview' ? 'RENDER_LIVE' : 'SOURCE_CODE'}
                     </span>
                 </div>
 
@@ -74,8 +91,8 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
             </div>
 
             {/* Content */}
-            <div className="flex-1 relative overflow-hidden bg-black/20">
-                {!codeString ? (
+            <div className="flex-1 relative overflow-hidden bg-black/20 flex flex-col">
+                {!displayCode ? (
                     <div className="absolute inset-0 flex items-center justify-center text-slate-500 flex-col space-y-4">
                         <div className="relative">
                             <div className="w-16 h-16 rounded-full border-2 border-slate-700/50 border-t-purple-500 animate-spin"></div>
@@ -88,11 +105,11 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
                 ) : (
                     <>
                         {/* Preview Mode */}
-                        <div className={`w-full h-full ${viewMode === 'preview' ? 'block' : 'hidden'}`}>
+                        <div className={`w-full flex-1 min-h-0 ${viewMode === 'preview' ? 'flex flex-col' : 'hidden'}`}>
                             <iframe
                                 ref={iframeRef}
                                 title="Simulation Output"
-                                className="w-full h-full border-none"
+                                className="w-full h-full border-none flex-1"
                                 sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
                             />
                         </div>
@@ -100,7 +117,7 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
                         {/* Code Mode */}
                         <div className={`w-full h-full overflow-auto custom-scrollbar p-0 ${viewMode === 'code' ? 'block' : 'hidden'}`}>
                             <pre className="text-xs font-mono p-4 text-slate-300 coding-font w-full h-full bg-[#0d1117]">
-                                <code>{codeString}</code>
+                                <code>{displayCode}</code>
                             </pre>
                         </div>
                     </>
