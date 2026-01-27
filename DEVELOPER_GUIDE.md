@@ -60,8 +60,25 @@ The application does not use a traditional backend. Instead, it uses `puter.ai.c
 3.  Request sent to `puter.ai.chat`.
 4.  Response is parsed. It *must* return a valid HTML string containing the simulation code.
 
+### Simulation Rendering
+The `SimulationViewer` component handles the display of generated code. To ensure a consistent and responsive experience across devices, we inject a default style block into the generated HTML before rendering it.
+
+**Style Injection:**
+We prepend/inject a `<style>` block that:
+- Resets margins and padding for `body` and `html`.
+- Sets `width: 100vw` and `height: 100vh`.
+- Forces `canvas` elements to `display: block` and take up 100% of the container size.
+- Hides overflow to prevent scrollbars on the iframe body itself.
+
+This ensures that any canvas-based simulation (like Three.js or standard Canvas API) fills the available iframe area completely.
+
 ### Sandboxing
-Security is critical. The generated code is rendered inside an `iframe` with the `sandbox` attribute set to `allow-scripts allow-same-origin`. This prevents the generated code from accessing cookies or local storage of the parent app, while still allowing it to run JavaScript.
+Security is critical. The generated code is rendered inside an `iframe` with the `sandbox` attribute set to `allow-scripts allow-same-origin allow-popups allow-forms`. This setup:
+- **allow-scripts**: Enables JavaScript execution, which is required for simulations.
+- **allow-same-origin**: Allows requests to be treated as being from the same origin, which is often needed for local resource loading or complex script interactions.
+- **allow-popups** & **allow-forms**: Added to support interactive elements within the generated simulations.
+
+Despite `allow-same-origin`, the iframe effectively isolates the execution context from the main application's state and sensitive data (like tokens stored in closures), though care should still be taken.
 
 ## 4. Development Workflow
 

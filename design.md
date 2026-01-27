@@ -7,7 +7,7 @@ The application is a client-side Single Page Application (SPA) built with React.
 1. **User Input**: User enters a prompt in the `ChatInterface`.
 2. **LLM Request**: App sends the prompt to `Puter.ai` via `src/lib/llm.ts`.
 3. **Code Generation**: The LLM returns a raw HTML string containing the full visualization (Canvas/Three.js/JS).
-4. **Rendering**: The `SimulationViewer` component injects this HTML into an `iframe` using `srcdoc`.
+4. **Rendering**: The `SimulationViewer` component injects this HTML into an `iframe` using `srcdoc` after injecting default styles to ensure full-viewport rendering.
 
 ## 2. Component Structure
 ```mermaid

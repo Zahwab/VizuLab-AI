@@ -8,6 +8,7 @@ Powered by a Large Language Model (LLM), VizuLab AI instantly writes and renders
 
 - **Generative Physics & Logic**: Create sorting algorithms, fractals, physics simulations, or data visualizations from a text prompt.
 - **Interactive Preview**: Live, sandboxed execution of generated code.
+- **Fully Responsive & Mobile-Ready Layout**: Optimized for all screen sizes with a flexible grid system.
 - **Modern UI**: A sleek, dark-themed, glassmorphism-inspired interface.
 - **Secure**: Client-side API key management and safe iframe rendering.
 - **Code Inspection**: View and copy the underlying code for any simulation.
