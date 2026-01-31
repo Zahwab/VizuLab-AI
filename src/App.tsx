@@ -8,7 +8,7 @@ import { Atom } from 'lucide-react';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'system', content: "Welcome to VizuLab AI. I can generate any visualization or simulation you describe." }
+    { role: 'system', content: "Welcome to VizuLab AI. I can generate any visualization or simulation you describe (<–^–>_±_<–^–>)" }
   ]);
   const [codeString, setCodeString] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);

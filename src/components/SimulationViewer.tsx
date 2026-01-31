@@ -176,7 +176,7 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
                 ) : (
                     <>
                         {/* Preview Mode */}
-                        <div className={`w-full h-full flex flex-col min-h-0 ${viewMode === 'preview' ? 'block' : 'hidden'}`}>
+                        <div className={`w-full flex-1 flex flex-col min-h-0 ${viewMode === 'preview' ? 'flex' : 'hidden'}`}>
                             <iframe
                                 ref={iframeRef}
                                 title="Simulation Output"
@@ -186,7 +186,7 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
                         </div>
 
                         {/* Code Mode */}
-                        <div className={`w-full h-full min-h-0 ${viewMode === 'code' ? 'block' : 'hidden'}`}>
+                        <div className={`w-full flex-1 min-h-0 ${viewMode === 'code' ? 'block' : 'hidden'}`}>
                             <Editor
                                 height="100%"
                                 defaultLanguage="html"
