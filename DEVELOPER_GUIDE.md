@@ -35,6 +35,7 @@ graph TD
     Layout --> Chat[ChatInterface.tsx]
     Layout --> Sim[SimulationViewer.tsx]
     Chat --> LLM[src/lib/llm.ts]
+    Sim --> Editor[Monaco Editor]
     Sim --> Iframe[Sandbox Iframe]
 
     subgraph Services
@@ -44,7 +45,7 @@ graph TD
 
 ### Key Directories
 
-*   **`src/components`**: UI components (Chat, SimulationViewer, etc.).
+*   **`src/components`**: UI components (Chat, SimulationViewer with integrated Monaco Editor, etc.).
 *   **`src/lib`**: Logic and helper functions.
     *   `llm.ts`: The core logic for interacting with the AI model.
 *   **`src/types`**: TypeScript type definitions.
@@ -79,6 +80,12 @@ Security is critical. The generated code is rendered inside an `iframe` with the
 - **allow-popups** & **allow-forms**: Added to support interactive elements within the generated simulations.
 
 Despite `allow-same-origin`, the iframe effectively isolates the execution context from the main application's state and sensitive data (like tokens stored in closures), though care should still be taken.
+
+### Code Editor (Monaco)
+We use `@monaco-editor/react` to provide a VS Code-like editing experience.
+- **Integration**: The `SimulationViewer` component toggles between the `iframe` preview and the Monaco `Editor`.
+- **Live Updates**: Changes in the editor automatically update the `iframe` source (with a standard HTML structure injection).
+- **Customization**: The editor is configured with a dark theme (`vs-dark`) and custom completion providers (e.g., C-style `printf` snippets) to enhance the coding experience.
 
 ## 4. Development Workflow
 

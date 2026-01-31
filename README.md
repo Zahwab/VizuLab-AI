@@ -1,4 +1,5 @@
 # VizuLab AI / LogicLoom
+![VizuLab AI Banner](public/vizulab-banner.png)
 
 **VizuLab AI** (also known as LogicLoom) is a next-generation Generative Simulation Engine. It allows users to generate interactive visualizations, simulations, and educational models simply by describing them in natural language.
 
@@ -11,7 +12,7 @@ Powered by a Large Language Model (LLM), VizuLab AI instantly writes and renders
 - **Fully Responsive & Mobile-Ready Layout**: Optimized for all screen sizes with a flexible grid system.
 - **Modern UI**: A sleek, dark-themed, glassmorphism-inspired interface.
 - **Secure**: Client-side API key management and safe iframe rendering.
-- **Code Inspection**: View and copy the underlying code for any simulation.
+- **Code Editor**: View, edit, and run the underlying code for any simulation directly in the browser.
 
 ## Tech Stack
 
