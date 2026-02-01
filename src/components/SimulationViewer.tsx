@@ -109,17 +109,22 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
     return (
         <div className="w-full flex-1 min-h-0 bg-slate-900/60 backdrop-blur-md rounded-xl overflow-hidden shadow-2xl relative flex flex-col">
             {/* Header */}
-            <div className="h-10 bg-slate-900/80 flex items-center justify-between px-4 shrink-0 z-10 w-full border-b border-white/5">
-                <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
-                    <span className="text-xs text-slate-400 font-mono ml-3 tracking-wider hidden sm:inline">
+            <div className="h-10 bg-slate-900/80 flex items-center justify-between px-2 sm:px-4 shrink-0 z-10 w-full border-b border-white/5 overflow-hidden">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div className="flex shrink-0 gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
+                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
+                        <div className="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
+                    </div>
+                    <span className="text-xs text-slate-400 font-mono ml-3 tracking-wider truncate hidden sm:inline-block">
                         VIEWPORT // {viewMode === 'preview' ? 'RENDER_LIVE' : 'EDITOR_MODE'}
+                    </span>
+                    <span className="text-xs text-slate-400 font-mono ml-3 tracking-wider truncate sm:hidden">
+                       // {viewMode === 'preview' ? 'LIVE' : 'EDIT'}
                     </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0 ml-2">
                     {viewMode === 'code' && (
                         <>
                             <button
@@ -163,7 +168,7 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
 
             {/* Content */}
             <div className="flex-1 relative overflow-hidden bg-black/20 flex flex-col min-h-0">
-                {!codeString ? (
+                {!codeString && viewMode === 'preview' ? (
                     <div className="absolute inset-0 flex items-center justify-center text-slate-500 flex-col space-y-4">
                         <div className="relative">
                             <div className="w-16 h-16 rounded-full border-2 border-slate-700/50 border-t-purple-500 animate-spin"></div>
@@ -176,17 +181,17 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
                 ) : (
                     <>
                         {/* Preview Mode */}
-                        <div className={`w-full flex-1 flex flex-col min-h-0 ${viewMode === 'preview' ? 'flex' : 'hidden'}`}>
+                        <div className={`absolute inset-0 bg-white ${viewMode === 'preview' ? 'block' : 'hidden'}`}>
                             <iframe
                                 ref={iframeRef}
                                 title="Simulation Output"
-                                className="w-full h-full border-none flex-1"
+                                className="w-full h-full border-none block"
                                 sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
                             />
                         </div>
 
                         {/* Code Mode */}
-                        <div className={`w-full flex-1 min-h-0 ${viewMode === 'code' ? 'block' : 'hidden'}`}>
+                        <div className={`absolute inset-0 bg-[#1e1e1e] ${viewMode === 'code' ? 'block' : 'hidden'}`}>
                             <Editor
                                 height="100%"
                                 defaultLanguage="html"
