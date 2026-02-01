@@ -114,7 +114,7 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
                     <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
                     <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
                     <div className="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
-                    <span className="text-xs text-slate-400 font-mono ml-3 tracking-wider">
+                    <span className="text-xs text-slate-400 font-mono ml-3 tracking-wider hidden sm:inline">
                         VIEWPORT // {viewMode === 'preview' ? 'RENDER_LIVE' : 'EDITOR_MODE'}
                     </span>
                 </div>
