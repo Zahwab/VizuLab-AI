@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Code, Eye, Copy, Check, RotateCcw } from 'lucide-react';
 import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
 
