@@ -2,8 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg-deep: #050510;
+  --bg-surface: rgba(15, 20, 35, 0.7);
+  --accent-teal: #00f0ff;
+  --accent-teal-muted: rgba(0, 240, 255, 0.2);
+  --accent-magenta: #ff003c;
+  --accent-magenta-muted: rgba(255, 0, 60, 0.2);
+}
+
 @layer base {
   body {
-    @apply bg-[#0f172a] text-white;
+    @apply bg-background text-slate-200 font-body antialiased;
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(0, 240, 255, 0.05), transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(255, 0, 60, 0.05), transparent 50%);
+    background-attachment: fixed;
   }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-widest uppercase;
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-teal-muted rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-teal-accent;
+}
+
+.glass-panel {
+  @apply bg-surface backdrop-blur-xl border border-white/5 shadow-[0_0_40px_rgba(0,0,0,0.5)];
+}
+
+.glitch-hover:hover {
+  animation: pulse-glow 2s infinite;
+  text-shadow: 0 0 8px var(--accent-teal);
 }

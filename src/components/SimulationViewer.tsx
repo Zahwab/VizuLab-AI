@@ -7,7 +7,6 @@ interface SimulationViewerProps {
 }
 
 export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }) => {
-    const iframeRef = useRef<HTMLIFrameElement>(null);
     const [viewMode, setViewMode] = useState<'preview' | 'code'>('preview');
     const [copied, setCopied] = useState(false);
 
@@ -25,25 +24,25 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
     // Use editableCode for display/preview
     const displayCode = editableCode;
 
-    useEffect(() => {
-        if (iframeRef.current && displayCode && viewMode === 'preview') {
-            // Inject styles to force full viewport
-            const resetStyle = `<style>
-                body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; }
-                canvas { display: block; width: 100% !important; height: 100% !important; }
-            </style>`;
+    const finalCode = React.useMemo(() => {
+        if (!displayCode) return '';
+        const resetStyle = `\n<style>
+            body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; }
+            canvas { display: block; width: 100% !important; height: 100% !important; }
+        </style>\n`;
 
-            // Try to insert after <head> if it exists, otherwise prepend
-            let finalCode = displayCode;
-            if (finalCode.includes('<head>')) {
-                finalCode = finalCode.replace('<head>', '<head>' + resetStyle);
-            } else {
-                finalCode = resetStyle + finalCode;
-            }
-
-            iframeRef.current.srcdoc = finalCode;
+        let code = displayCode;
+        if (/<\/head>/i.test(code)) {
+            code = code.replace(/<\/head>/i, resetStyle + '</head>');
+        } else if (/<body/i.test(code)) {
+            code = code.replace(/(<body[^>]*>)/i, '$1' + resetStyle);
+        } else if (/<html/i.test(code)) {
+            code = code.replace(/(<html[^>]*>)/i, '$1' + resetStyle);
+        } else {
+            code = resetStyle + code;
         }
-    }, [displayCode, viewMode]);
+        return code;
+    }, [displayCode]);
 
     const handleCopy = async () => {
         if (!displayCode) return;
@@ -107,20 +106,20 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
     };
 
     return (
-        <div className="w-full flex-1 min-h-0 bg-slate-900/60 backdrop-blur-md rounded-xl overflow-hidden shadow-2xl relative flex flex-col">
+        <div className="w-full flex-1 min-h-0 bg-transparent flex flex-col relative h-full">
             {/* Header */}
-            <div className="h-10 bg-slate-900/80 flex items-center justify-between px-2 sm:px-4 shrink-0 z-10 w-full border-b border-white/5 overflow-hidden">
+            <div className="h-10 bg-surface/90 flex items-center justify-between px-2 sm:px-4 shrink-0 z-10 w-full border-b border-white/5 overflow-hidden">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                     <div className="flex shrink-0 gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
-                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
-                        <div className="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
+                        <div className="w-2h h-2 rounded bg-magenta-accent/80 shadow-[0_0_8px_var(--accent-magenta)]"></div>
+                        <div className="w-2 h-2 rounded bg-teal-accent/50"></div>
+                        <div className="w-2 h-2 rounded bg-teal-accent/80 shadow-[0_0_8px_var(--accent-teal)]"></div>
                     </div>
-                    <span className="text-xs text-slate-400 font-mono ml-3 tracking-wider truncate hidden sm:inline-block">
+                    <span className="text-[10px] sm:text-xs text-slate-400 font-mono ml-2 sm:ml-3 tracking-wider truncate hidden sm:inline-block">
                         VIEWPORT // {viewMode === 'preview' ? 'RENDER_LIVE' : 'EDITOR_MODE'}
                     </span>
-                    <span className="text-xs text-slate-400 font-mono ml-3 tracking-wider truncate sm:hidden">
-                       // {viewMode === 'preview' ? 'LIVE' : 'EDIT'}
+                    <span className="text-[10px] text-slate-400 font-mono ml-2 tracking-wider truncate sm:hidden">
+                       VIEWPORT // {viewMode === 'preview' ? 'LIVE' : 'EDIT'}
                     </span>
                 </div>
 
@@ -143,12 +142,12 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
                             </button>
                         </>
                     )}
-                    <div className="flex bg-slate-800/50 rounded-lg p-1 border border-white/5">
+                    <div className="flex bg-surface/50 rounded-lg p-1 border border-white/5">
                         <button
                             onClick={() => setViewMode('preview')}
                             className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider transition-all ${viewMode === 'preview'
-                                ? 'bg-indigo-500/20 text-indigo-300 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-300'
+                                ? 'bg-teal-muted text-teal-accent shadow-[0_0_10px_var(--accent-teal-muted)]'
+                                : 'text-slate-500 hover:text-teal-accent/50'
                                 }`}
                         >
                             <Eye size={12} /> Preview
@@ -156,8 +155,8 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
                         <button
                             onClick={() => setViewMode('code')}
                             className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider transition-all ${viewMode === 'code'
-                                ? 'bg-indigo-500/20 text-indigo-300 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-300'
+                                ? 'bg-teal-muted text-teal-accent shadow-[0_0_10px_var(--accent-teal-muted)]'
+                                : 'text-slate-500 hover:text-teal-accent/50'
                                 }`}
                         >
                             <Code size={12} /> Editor
@@ -167,26 +166,29 @@ export const SimulationViewer: React.FC<SimulationViewerProps> = ({ codeString }
             </div>
 
             {/* Content */}
-            <div className="flex-1 relative overflow-hidden bg-black/20 flex flex-col min-h-0">
+            <div className="flex-1 relative overflow-hidden flex flex-col min-h-0 bg-[#050510]">
                 {!codeString && viewMode === 'preview' ? (
-                    <div className="absolute inset-0 flex items-center justify-center text-slate-500 flex-col space-y-4">
+                    <div className="absolute inset-0 flex items-center justify-center flex-col space-y-6">
                         <div className="relative">
-                            <div className="w-16 h-16 rounded-full border-2 border-slate-700/50 border-t-purple-500 animate-spin"></div>
+                            <div className="w-20 h-20 rounded-full border border-teal-accent/20 border-t-teal-accent animate-spin shadow-[0_0_30px_var(--accent-teal-muted)]"></div>
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
+                                <div className="w-2 h-2 rounded-full bg-magenta-accent animate-pulse-glow shadow-[0_0_15px_var(--accent-magenta)]"></div>
                             </div>
                         </div>
-                        <p className="font-mono text-xs tracking-[0.2em] uppercase text-slate-400/60 animate-pulse">Awaiting Input Data...</p>
+                        <div className="flex flex-col items-center gap-2">
+                           <p className="font-heading text-xs tracking-widest uppercase text-teal-accent animate-pulse">Awaiting Signal</p>
+                           <p className="font-mono text-[9px] text-teal-accent/40 uppercase tracking-[0.3em]">Standby for Input Data</p>
+                        </div>
                     </div>
                 ) : (
                     <>
                         {/* Preview Mode */}
-                        <div className={`absolute inset-0 bg-white ${viewMode === 'preview' ? 'block' : 'hidden'}`}>
+                        <div className={`absolute inset-0 bg-white transition-opacity duration-300 ${viewMode === 'preview' ? 'z-10 opacity-100' : '-z-10 opacity-0 pointer-events-none'}`}>
                             <iframe
-                                ref={iframeRef}
+                                srcDoc={finalCode}
                                 title="Simulation Output"
                                 className="w-full h-full border-none block"
-                                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                                sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-downloads"
                             />
                         </div>
 

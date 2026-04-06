@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VizuLab – Comprehensive Model Diagnostics</title>
+    <script src="https://js.puter.com/v2/"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #050510;
+            --surface: #0a0a1a;
+            --border: #ffffff10;
+            --cyan: #00f0ff;
+            --green: #00f0af;
+            --red: #f04a60;
+            --amber: #f0a500;
+            --magenta: #ff006e;
+            --purple: #a855f7;
+        }
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg);
+            color: #e2e8f0;
+            padding: 1.5rem;
+            min-height: 100vh;
+        }
+        h1 {
+            font-size: 1.3rem;
+            color: var(--cyan);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 0.3rem;
+        }
+        .subtitle {
+            font-size: 0.7rem;
+            color: #00f0ff44;
+            letter-spacing: 0.15em;
+            margin-bottom: 1.5rem;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+        .btn {
+            background: #001a1f;
+            border: 1px solid #00f0ff40;
+            color: var(--cyan);
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-family: inherit;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: #00f0ff15; border-color: var(--cyan); }
+        .btn.account { border-color: #f0a50060; color: var(--amber); }
+        .btn.account:hover { background: #f0a50015; }
+        .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .btn.danger { border-color: #f04a6060; color: var(--red); }
+        .btn.danger:hover { background: #f04a6015; }
+        .btn.export { border-color: #a855f760; color: var(--purple); }
+        .btn.export:hover { background: #a855f715; }
+        .filter-group {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: #718096;
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: #00f0ff08;
+        }
+        .test-select {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: #a0aec0;
+            padding: 0.45rem 0.6rem;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-family: inherit;
+        }
+        .section-header {
+            font-size: 0.7rem;
+            color: var(--cyan);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-header .count {
+            color: #4a5568;
+            font-size: 0.6rem;
+        }
+        .model-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            margin-bottom: 0.4rem;
+            display: grid;
+            grid-template-columns: 14px 1fr 1fr 2fr 70px;
+            align-items: center;
+            gap: 0.6rem;
+            transition: border-color 0.3s, background 0.3s;
+            font-size: 0.72rem;
+        }
+        .model-card.testing { border-color: #f0a50050; background: #f0a50005; }
+        .model-card.ok { border-color: #00f0af40; }
+        .model-card.fail { border-color: #f04a6040; }
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #333;
+            flex-shrink: 0;
+            transition: background 0.3s;
+        }
+        .status-dot.testing { background: var(--amber); animation: pulse 1s infinite; }
+        .status-dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+        .status-dot.fail { background: var(--red); box-shadow: 0 0 6px var(--red); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+        .model-name { color: #cbd5e0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .model-id { color: #4a5568; font-size: 0.62rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .model-result {
+            color: #718096;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-size: 0.65rem;
+        }
+        .model-result.ok { color: var(--green); }
+        .model-result.fail { color: var(--red); }
+        .latency { font-size: 0.65rem; color: #4a5568; text-align: right; font-weight: 600; }
+        .latency.fast { color: var(--green); }
+        .latency.medium { color: var(--amber); }
+        .latency.slow { color: var(--red); }
+        #summary {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.78rem;
+            color: #a0aec0;
+            display: none;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+        }
+        .stat-box {
+            background: #05051080;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.6rem;
+            text-align: center;
+        }
+        .stat-box .val {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--cyan);
+        }
+        .stat-box .label {
+            font-size: 0.6rem;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 0.2rem;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cyan), var(--green));
+            border-radius: 2px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.8rem;
+            font-size: 0.68rem;
+        }
+        .ranking-table th {
+            text-align: left;
+            color: var(--cyan);
+            font-weight: 500;
+            padding: 0.4rem;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.6rem;
+        }
+        .ranking-table td {
+            padding: 0.35rem 0.4rem;
+            border-bottom: 1px solid #ffffff06;
+            color: #a0aec0;
+        }
+        .ranking-table tr:hover td { background: #ffffff04; }
+        .rank-badge {
+            display: inline-block;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 18px;
+            font-size: 0.55rem;
+            font-weight: 700;
+            margin-right: 0.3rem;
+        }
+        .rank-1 { background: #ffd700; color: #000; }
+        .rank-2 { background: #c0c0c0; color: #000; }
+        .rank-3 { background: #cd7f32; color: #000; }
+        .accuracy-bar {
+            width: 60px; height: 4px;
+            background: #ffffff10;
+            border-radius: 2px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+        .accuracy-bar .fill {
+            height: 100%;
+            border-radius: 2px;
+        }
+        .hidden { display: none !important; }
+        .account-bar {
+            background: #0d0d20;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.5rem 0.8rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            font-size: 0.68rem;
+        }
+        .account-bar .acct-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+            flex-shrink: 0;
+        }
+        .account-bar .acct-dot.disconnected { background: var(--red); box-shadow: 0 0 6px var(--red); }
+        .account-bar .acct-label { color: #4a5568; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.6rem; }
+        .account-bar .acct-user { color: var(--cyan); font-weight: 600; }
+        .account-bar .acct-stat { color: #4a5568; font-size: 0.6rem; }
+        .account-bar .acct-stat strong { color: var(--amber); }
+        .switch-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5,5,16,0.92);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .switch-modal {
+            background: #0a0a1a;
+            border: 1px solid var(--cyan);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 0 60px rgba(0,240,255,0.15);
+        }
+        .switch-modal h2 { color: var(--cyan); font-size: 1rem; margin-bottom: 0.5rem; letter-spacing: 0.15em; }
+        .switch-modal p { color: #718096; font-size: 0.75rem; margin-bottom: 1.2rem; line-height: 1.6; }
+        .switch-modal .stats-line { color: var(--amber); font-size: 0.7rem; margin-bottom: 1rem; }
+        @media (max-width: 768px) {
+            body { padding: 0.8rem; }
+            .model-card {
+                grid-template-columns: 14px 1fr 60px;
+                grid-template-rows: auto auto;
+            }
+            .model-id, .model-result { grid-column: 2 / -1; }
+        }
+    </style>
+</head>
+<body>
+    <h1>⚗ VizuLab // Model Diagnostic Lab</h1>
+    <div class="subtitle">Comprehensive latency & accuracy benchmarks for simulation-grade AI models via Puter.js</div>
+
+    <!-- Account Status Bar -->
+    <div class="account-bar" id="account-bar">
+        <div class="acct-dot" id="acct-dot"></div>
+        <span class="acct-label">Account:</span>
+        <span class="acct-user" id="acct-user">Loading...</span>
+        <span class="acct-stat">Switches: <strong id="switch-count">0</strong></span>
+        <span class="acct-stat">Tested on this acct: <strong id="acct-tested">0</strong></span>
+        <button class="btn account" onclick="manualSwitchAccount()" style="padding:0.3rem 0.8rem;font-size:0.6rem;">⇄ Switch Account</button>
+    </div>
+
+    <div class="progress-bar"><div class="fill" id="progress-fill"></div></div>
+
+    <div class="controls">
+        <button class="btn" id="run-btn" onclick="runAllTests()">▶ Run All Tests</button>
+        <button class="btn danger" id="stop-btn" onclick="stopTests()" disabled>■ Stop</button>
+        <button class="btn export" id="export-btn" onclick="exportResults()" disabled>⬇ Export CSV</button>
+        <select class="test-select" id="test-type">
+            <option value="basic">Basic Ping (5-word reply)</option>
+            <option value="sim">Simulation Accuracy (HTML gen)</option>
+        </select>
+        <select class="test-select" id="delay-ms" title="Delay between requests to avoid rate limits">
+            <option value="0">No delay</option>
+            <option value="1000">1s delay</option>
+            <option value="2000" selected>2s delay</option>
+            <option value="3000">3s delay</option>
+            <option value="5000">5s delay</option>
+        </select>
+        <select class="test-select" id="batch-size" title="Models per account before auto-switching">
+            <option value="10">10 per acct</option>
+            <option value="20">20 per acct</option>
+            <option value="50">50 per acct</option>
+            <option value="999" selected>No acct limit</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:4px;font-size:0.62rem;color:#4a5568;cursor:pointer;text-transform:uppercase;letter-spacing:0.08em;" title="Force :free tag to bypass limits and find free models">
+            <input type="checkbox" id="force-free" checked style="accent-color:var(--cyan);">
+            Force :free testing (bypass limits)
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:0.62rem;color:#4a5568;cursor:pointer;text-transform:uppercase;letter-spacing:0.08em;">
+            <input type="checkbox" id="free-first" style="accent-color:var(--green);">
+            Free models first
+        </label>
+        <button class="btn" onclick="runFreeOnly()" style="border-color:#00f0af60;color:var(--green);">🆓 Run Free Only</button>
+    </div>
+
+    <div class="controls">
+        <span style="font-size:0.6rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.1em;margin-right:0.3rem;">Filter:</span>
+        <div class="filter-group" id="filters"></div>
+    </div>
+
+    <div id="cards"></div>
+    <div id="summary"></div>
+
+    <script>
+        // ── Comprehensive model registry ──────────────────────────────────────
+        const MODELS = [
+            // ═══ ANTHROPIC ═══
+            { name: "Claude Opus 4.6",             id: "anthropic/claude-opus-4-6",       provider: "Anthropic", tier: "flagship" },
+            { name: "Claude Sonnet 4.6",           id: "anthropic/claude-sonnet-4-6",     provider: "Anthropic", tier: "pro" },
+            { name: "Claude Opus 4.5",             id: "anthropic/claude-opus-4-5",       provider: "Anthropic", tier: "flagship" },
+            { name: "Claude Sonnet 4.5",           id: "anthropic/claude-sonnet-4-5",     provider: "Anthropic", tier: "pro" },
+            { name: "Claude Opus 4.1",             id: "anthropic/claude-opus-4-1",       provider: "Anthropic", tier: "flagship" },
+            { name: "Claude Haiku 4.5",            id: "anthropic/claude-haiku-4-5",      provider: "Anthropic", tier: "lite" },
+
+            // ═══ OPENAI ═══
+            { name: "GPT-5.4",                     id: "openai/gpt-5.4",                  provider: "OpenAI", tier: "flagship" },
+            { name: "GPT-5.4 Pro",                 id: "openai/gpt-5.4-pro",              provider: "OpenAI", tier: "flagship" },
+            { name: "GPT-5.4 Mini",                id: "openai/gpt-5.4-mini",             provider: "OpenAI", tier: "pro" },
+            { name: "GPT-5.4 Nano",                id: "openai/gpt-5.4-nano",             provider: "OpenAI", tier: "lite" },
+            { name: "GPT-5.3 Chat",                id: "openai/gpt-5.3-chat",             provider: "OpenAI", tier: "pro" },
+            { name: "GPT-5.3 Codex",               id: "openai/gpt-5.3-codex",            provider: "OpenAI", tier: "flagship" },
+            { name: "GPT-5.2",                     id: "openai/gpt-5.2",                  provider: "OpenAI", tier: "flagship" },
+            { name: "GPT-5.2 Pro",                 id: "openai/gpt-5.2-pro",              provider: "OpenAI", tier: "flagship" },
+            { name: "GPT-5.2 Chat",                id: "openai/gpt-5.2-chat",             provider: "OpenAI", tier: "pro" },
+            { name: "GPT-5.2 Codex",               id: "openai/gpt-5.2-codex",            provider: "OpenAI", tier: "flagship" },
+            { name: "GPT-5.1",                     id: "openai/gpt-5.1",                  provider: "OpenAI", tier: "pro" },
+            { name: "GPT-5.1 Codex",               id: "openai/gpt-5.1-codex",            provider: "OpenAI", tier: "pro" },
+            { name: "GPT-5.1 Codex Mini",          id: "openai/gpt-5.1-codex-mini",       provider: "OpenAI", tier: "lite" },
+            { name: "GPT-5",                       id: "openai/gpt-5",                    provider: "OpenAI", tier: "pro" },
+            { name: "GPT-5 Mini",                  id: "openai/gpt-5-mini",               provider: "OpenAI", tier: "lite" },
+            { name: "GPT-5 Nano",                  id: "openai/gpt-5-nano",               provider: "OpenAI", tier: "lite" },
+            { name: "GPT-5 Codex",                 id: "openai/gpt-5-codex",              provider: "OpenAI", tier: "pro" },
+            { name: "GPT-OSS 120B",                id: "openai/gpt-oss-120b",             provider: "OpenAI", tier: "pro" },
+            { name: "GPT-OSS 20B",                 id: "openai/gpt-oss-20b",              provider: "OpenAI", tier: "lite" },
+
+            // ═══ GOOGLE ═══
+            { name: "Gemini 3.1 Pro",              id: "google/gemini-3.1-pro-preview",    provider: "Google", tier: "flagship" },
+            { name: "Gemini 3.1 Flash Lite",       id: "google/gemini-3.1-flash-lite-preview", provider: "Google", tier: "lite" },
+            { name: "Gemini 3 Pro",                id: "google/gemini-3-pro-preview",      provider: "Google", tier: "flagship" },
+            { name: "Gemini 3 Flash",              id: "google/gemini-3-flash-preview",    provider: "Google", tier: "pro" },
+            { name: "Gemini 2.5 Flash Lite",       id: "google/gemini-2.5-flash-lite",     provider: "Google", tier: "lite" },
+
+            // ═══ xAI ═══
+            { name: "Grok 4.20",                   id: "x-ai/grok-4.20",                  provider: "xAI", tier: "flagship" },
+            { name: "Grok 4.20 Multi-Agent",       id: "x-ai/grok-4.20-multi-agent",      provider: "xAI", tier: "flagship" },
+            { name: "Grok 4.20 Beta",              id: "x-ai/grok-4.20-beta",             provider: "xAI", tier: "flagship" },
+            { name: "Grok 4.1 Fast",               id: "x-ai/grok-4-1-fast",              provider: "xAI", tier: "pro" },
+            { name: "Grok 4.1 Fast NR",            id: "x-ai/grok-4-1-fast-non-reasoning", provider: "xAI", tier: "pro" },
+            { name: "Grok 4 Fast",                 id: "x-ai/grok-4-fast",                provider: "xAI", tier: "pro" },
+            { name: "Grok 4 Fast NR",              id: "x-ai/grok-4-fast-non-reasoning",  provider: "xAI", tier: "lite" },
+            { name: "Grok 4",                      id: "x-ai/grok-4",                     provider: "xAI", tier: "flagship" },
+            { name: "Grok Code Fast 1",            id: "x-ai/grok-code-fast-1",           provider: "xAI", tier: "pro" },
+
+            // ═══ DEEPSEEK ═══
+            { name: "DeepSeek V3.2",               id: "deepseek/deepseek-v3.2",           provider: "DeepSeek", tier: "flagship" },
+            { name: "DeepSeek V3.2 Speciale",      id: "deepseek/deepseek-v3.2-speciale",  provider: "DeepSeek", tier: "flagship" },
+            { name: "DeepSeek V3.1",               id: "deepseek/deepseek-chat-v3.1",      provider: "DeepSeek", tier: "pro" },
+            { name: "DeepSeek V3.1 Terminus",      id: "deepseek/deepseek-v3.1-terminus",  provider: "DeepSeek", tier: "pro" },
+
+            // ═══ MISTRAL ═══
+            { name: "Mistral Small 4",             id: "mistralai/mistral-small-2603",     provider: "Mistral", tier: "pro" },
+            { name: "Mistral Medium 3.1",          id: "mistralai/mistral-medium-3.1",     provider: "Mistral", tier: "flagship" },
+            { name: "Mistral Small 3.2",           id: "mistralai/mistral-small-2506",     provider: "Mistral", tier: "pro" },
+            { name: "Mistral Small Creative",      id: "mistralai/mistral-small-creative", provider: "Mistral", tier: "pro" },
+            { name: "Devstral 2",                  id: "mistralai/devstral-2512",          provider: "Mistral", tier: "pro" },
+            { name: "Devstral Medium",             id: "mistralai/devstral-medium",        provider: "Mistral", tier: "pro" },
+            { name: "Ministral 14B",               id: "mistralai/ministral-14b-2512",     provider: "Mistral", tier: "lite" },
+
+            // ═══ QWEN ═══
+            { name: "Qwen 3.6 Plus Preview",       id: "qwen/qwen3.6-plus-preview:free",  provider: "Qwen", tier: "flagship" },
+            { name: "Qwen 3.5 Plus",               id: "qwen/qwen3.5-plus-02-15",         provider: "Qwen", tier: "flagship" },
+            { name: "Qwen 3.5 397B A17B",          id: "qwen/qwen3.5-397b-a17b",          provider: "Qwen", tier: "flagship" },
+            { name: "Qwen 3.5 122B A10B",          id: "qwen/qwen3.5-122b-a10b",          provider: "Qwen", tier: "pro" },
+            { name: "Qwen 3.5-27B",                id: "qwen/qwen3.5-27b",                provider: "Qwen", tier: "pro" },
+            { name: "Qwen 3.5-9B",                 id: "qwen/qwen3.5-9b",                 provider: "Qwen", tier: "lite" },
+            { name: "Qwen 3.5 Flash",              id: "qwen/qwen3.5-flash-02-23",        provider: "Qwen", tier: "lite" },
+            { name: "Qwen3 Max Thinking",          id: "qwen/qwen3-max-thinking",         provider: "Qwen", tier: "flagship" },
+            { name: "Qwen3 Coder Plus",            id: "qwen/qwen3-coder-plus",           provider: "Qwen", tier: "pro" },
+            { name: "Qwen3 Coder Flash",           id: "qwen/qwen3-coder-flash",          provider: "Qwen", tier: "lite" },
+            { name: "Qwen3 Coder Next",            id: "qwen/qwen3-coder-next",           provider: "Qwen", tier: "lite" },
+
+            // ═══ Z.AI (Zhipu) ═══
+            { name: "GLM 5",                       id: "z-ai/glm-5",                      provider: "Z.AI", tier: "flagship" },
+            { name: "GLM 5 Turbo",                 id: "z-ai/glm-5-turbo",                provider: "Z.AI", tier: "pro" },
+            { name: "GLM 4.7",                     id: "z-ai/glm-4.7",                    provider: "Z.AI", tier: "pro" },
+            { name: "GLM 4.7 Flash",               id: "z-ai/glm-4.7-flash",              provider: "Z.AI", tier: "lite" },
+            { name: "GLM 4.6",                     id: "z-ai/glm-4.6",                    provider: "Z.AI", tier: "pro" },
+            { name: "GLM 4.5",                     id: "z-ai/glm-4.5",                    provider: "Z.AI", tier: "pro" },
+            { name: "GLM 4.5 Air",                 id: "z-ai/glm-4.5-air",                provider: "Z.AI", tier: "lite" },
+
+            // ═══ MINIMAX ═══
+            { name: "MiniMax M2.7",                id: "minimax/minimax-m2.7",             provider: "MiniMax", tier: "flagship" },
+            { name: "MiniMax M2.5",                id: "minimax/minimax-m2.5",             provider: "MiniMax", tier: "flagship" },
+            { name: "MiniMax M2.1",                id: "minimax/minimax-m2.1",             provider: "MiniMax", tier: "pro" },
+            { name: "MiniMax M2",                  id: "minimax/minimax-m2",               provider: "MiniMax", tier: "pro" },
+
+            // ═══ MOONSHOT ═══
+            { name: "Kimi K2.5",                   id: "moonshotai/kimi-k2.5",             provider: "Moonshot", tier: "flagship" },
+            { name: "Kimi K2 Thinking",            id: "moonshotai/kimi-k2-thinking",      provider: "Moonshot", tier: "flagship" },
+            { name: "Kimi K2 0905",                id: "moonshotai/kimi-k2-0905",          provider: "Moonshot", tier: "pro" },
+            { name: "Kimi K2",                     id: "moonshotai/kimi-k2",               provider: "Moonshot", tier: "pro" },
+
+            // ═══ STEPFUN ═══
+            { name: "Step 3.5 Flash",              id: "stepfun/step-3.5-flash",           provider: "StepFun", tier: "lite" },
+            { name: "Step3",                       id: "stepfun-ai/step3",                 provider: "StepFun", tier: "pro" },
+
+            // ═══ BYTEDANCE SEED ═══
+            { name: "Seed 2.0 Lite",               id: "bytedance-seed/seed-2.0-lite",     provider: "ByteDance", tier: "pro" },
+            { name: "Seed 2.0 Mini",               id: "bytedance-seed/seed-2.0-mini",     provider: "ByteDance", tier: "lite" },
+            { name: "Seed 1.6",                    id: "bytedance-seed/seed-1.6",          provider: "ByteDance", tier: "pro" },
+            { name: "Seed 1.6 Flash",              id: "bytedance-seed/seed-1.6-flash",    provider: "ByteDance", tier: "lite" },
+
+            // ═══ NVIDIA ═══
+            { name: "Nemotron 3 Super 120B",       id: "nvidia/nemotron-3-super-120b-a12b", provider: "NVIDIA", tier: "pro" },
+            { name: "Nemotron 3 Nano 30B",         id: "nvidia/nemotron-3-nano-30b-a3b",   provider: "NVIDIA", tier: "lite" },
+            { name: "Nemotron Nano 9B V2",         id: "nvidia/nemotron-nano-9b-v2",       provider: "NVIDIA", tier: "lite" },
+
+            // ═══ REKA AI ═══
+            { name: "Reka Edge",                   id: "rekaai/reka-edge",                 provider: "Reka", tier: "lite" },
+
+            // ═══ ARCEE AI ═══
+            { name: "Trinity Large Thinking",      id: "arcee-ai/trinity-large-thinking",  provider: "Arcee", tier: "flagship" },
+            { name: "Trinity Large Preview",       id: "arcee-ai/trinity-large-preview:free", provider: "Arcee", tier: "pro" },
+            { name: "Trinity Mini",                id: "arcee-ai/trinity-mini",            provider: "Arcee", tier: "lite" },
+
+            // ═══ INCEPTION ═══
+            { name: "Mercury 2",                   id: "inception/mercury-2",              provider: "Inception", tier: "pro" },
+
+            // ═══ XIAOMI ═══
+            { name: "MiMo V2 Pro",                 id: "xiaomi/mimo-v2-pro",               provider: "Xiaomi", tier: "flagship" },
+            { name: "MiMo V2 Flash",               id: "xiaomi/mimo-v2-flash",             provider: "Xiaomi", tier: "lite" },
+
+            // ═══ KWAIPILOT ═══
+            { name: "KAT-Coder-Pro V2",            id: "kwaipilot/kat-coder-pro-v2",       provider: "KwaiPilot", tier: "pro" },
+            { name: "KAT-Coder-Pro V1",            id: "kwaipilot/kat-coder-pro",          provider: "KwaiPilot", tier: "pro" },
+
+            // ═══ NOUS RESEARCH ═══
+            { name: "Hermes 4 405B",               id: "nousresearch/hermes-4-405b",       provider: "Nous", tier: "flagship" },
+            { name: "Hermes 4 70B",                id: "nousresearch/hermes-4-70b",        provider: "Nous", tier: "pro" },
+
+            // ═══ ALLEN AI ═══
+            { name: "OLMo 3.1 32B Instruct",       id: "allenai/olmo-3.1-32b-instruct",   provider: "AllenAI", tier: "pro" },
+            { name: "OLMo 3.1 32B Think",          id: "allenai/olmo-3.1-32b-think",       provider: "AllenAI", tier: "pro" },
+
+            // ═══ UPSTAGE ═══
+            { name: "Solar Pro 3",                 id: "upstage/solar-pro-3",              provider: "Upstage", tier: "pro" },
+
+            // ═══ LIQUID AI ═══
+            { name: "LFM2 24B A2B",               id: "liquid/lfm-2-24b-a2b",             provider: "Liquid", tier: "lite" },
+
+            // ═══ MEITUAN ═══
+            { name: "LongCat Flash Chat",          id: "meituan/longcat-flash-chat",       provider: "Meituan", tier: "pro" },
+
+            // ═══ NEX AGI ═══
+            { name: "DS V3.1 Nex N1",              id: "nex-agi/deepseek-v3.1-nex-n1",    provider: "NexAGI", tier: "pro" },
+
+            // ═══ AMAZON ═══
+            { name: "Nova 2 Lite",                 id: "amazon/nova-2-lite-v1",            provider: "Amazon", tier: "lite" },
+
+            // ═══ BAIDU ═══
+            { name: "ERNIE 4.5 300B",              id: "baidu/ernie-4.5-300b-a47b",        provider: "Baidu", tier: "flagship" },
+            { name: "ERNIE 4.5 21B",               id: "baidu/ernie-4.5-21b-a3b",          provider: "Baidu", tier: "lite" },
+
+            // ═══ TENCENT ═══
+            { name: "Hunyuan A13B",                id: "tencent/hunyuan-a13b-instruct",    provider: "Tencent", tier: "pro" },
+
+            // ═══ AION LABS ═══
+            { name: "Aion 2.0",                    id: "aion-labs/aion-2.0",               provider: "Aion", tier: "pro" },
+
+            // ═══ FREE TIER MODELS (use :free suffix for zero-cost testing) ═══
+            { name: "🆓 Qwen 3.6 Plus",            id: "qwen/qwen3.6-plus-preview:free",       provider: "Free", tier: "free" },
+            { name: "🆓 Trinity Large",             id: "arcee-ai/trinity-large-preview:free",  provider: "Free", tier: "free" },
+            { name: "🆓 Gemma 3n 2B",              id: "google/gemma-3n-e2b-it:free",          provider: "Free", tier: "free" },
+            { name: "🆓 DeepSeek V3.2",            id: "deepseek/deepseek-v3.2:free",          provider: "Free", tier: "free" },
+            { name: "🆓 DeepSeek V3.1",            id: "deepseek/deepseek-chat-v3.1:free",     provider: "Free", tier: "free" },
+            { name: "🆓 Qwen3 Coder",              id: "qwen/qwen3-coder:free",                provider: "Free", tier: "free" },
+            { name: "🆓 Qwen3 235B A22B",          id: "qwen/qwen3-235b-a22b:free",            provider: "Free", tier: "free" },
+            { name: "🆓 Qwen3 30B A3B",            id: "qwen/qwen3-30b-a3b:free",              provider: "Free", tier: "free" },
+            { name: "🆓 Llama 4 Scout",            id: "meta-llama/llama-4-scout:free",         provider: "Free", tier: "free" },
+            { name: "🆓 Llama 4 Maverick",         id: "meta-llama/llama-4-maverick:free",      provider: "Free", tier: "free" },
+            { name: "🆓 Mistral Small 3.2",        id: "mistralai/mistral-small-3.2-24b-instruct:free", provider: "Free", tier: "free" },
+            { name: "🆓 Phi-4 Reasoning+",         id: "microsoft/phi-4-reasoning-plus:free",   provider: "Free", tier: "free" },
+            { name: "🆓 Hermes 4 405B",            id: "nousresearch/hermes-4-405b:free",       provider: "Free", tier: "free" },
+            { name: "🆓 OLMo 3.1 32B",             id: "allenai/olmo-3.1-32b-instruct:free",   provider: "Free", tier: "free" },
+            { name: "🆓 Nemotron Nano 9B",         id: "nvidia/nemotron-nano-9b-v2:free",       provider: "Free", tier: "free" },
+            { name: "🆓 MiMo V2 Flash",            id: "xiaomi/mimo-v2-flash:free",             provider: "Free", tier: "free" },
+            { name: "🆓 Hunyuan A13B",             id: "tencent/hunyuan-a13b-instruct:free",    provider: "Free", tier: "free" },
+            { name: "🆓 ERNIE 4.5 21B",            id: "baidu/ernie-4.5-21b-a3b:free",          provider: "Free", tier: "free" },
+            { name: "🆓 Gemma 3n 4B",              id: "google/gemma-3n-e4b-it:free",           provider: "Free", tier: "free" },
+            { name: "🆓 GLM 4.5 Air",              id: "z-ai/glm-4.5-air:free",                provider: "Free", tier: "free" },
+            { name: "🆓 MiniMax M2",               id: "minimax/minimax-m2:free",               provider: "Free", tier: "free" },
+            { name: "🆓 LFM2 24B",                 id: "liquid/lfm-2-24b-a2b:free",             provider: "Free", tier: "free" },
+            { name: "🆓 Reka Edge",                id: "rekaai/reka-edge:free",                 provider: "Free", tier: "free" },
+            { name: "🆓 Kimi K2",                  id: "moonshotai/kimi-k2:free",               provider: "Free", tier: "free" },
+
+            // ═══ LEGACY / SHORTHAND IDs ═══
+            { name: "Claude Sonnet 4.5 ★",         id: "claude-sonnet-4-5",                provider: "Anthropic", tier: "pro" },
+            { name: "GPT-4o",                      id: "gpt-4o",                           provider: "OpenAI", tier: "legacy" },
+            { name: "GPT-5 Nano (Short)",          id: "gpt-5-nano",                       provider: "OpenAI", tier: "lite" },
+            { name: "Gemini 2.5 Flash Lite (Short)", id: "gemini-2.5-flash-lite",           provider: "Google", tier: "lite" },
+        ];
+
+        // ── Test prompts ──────────────────────────────────────────────────────
+        const TEST_BASIC = "Reply with exactly 5 words: confirm you are working correctly.";
+        const TEST_SIM   = `Write a minimal HTML page with a <canvas> that draws a single blue circle bouncing on the screen using requestAnimationFrame. Output ONLY raw HTML starting with <!DOCTYPE html>. No markdown, no explanation. The entire code must be under 40 lines.`;
+
+        // ── State ─────────────────────────────────────────────────────────────
+        let aborted = false;
+        let allResults = [];
+        let activeFilter = 'all';
+        let switchCount = 0;
+        let testedOnCurrentAccount = 0;
+        let switchResolve = null; // for the switch-account promise
+
+        // ── Account management ────────────────────────────────────────────────
+        async function refreshAccountDisplay() {
+            const userEl = document.getElementById('acct-user');
+            const dotEl = document.getElementById('acct-dot');
+            try {
+                const user = await puter.auth.getUser();
+                userEl.textContent = user?.username || user?.email || 'Signed In';
+                dotEl.className = 'acct-dot';
+            } catch {
+                userEl.textContent = 'Not signed in';
+                dotEl.className = 'acct-dot disconnected';
+            }
+            document.getElementById('switch-count').textContent = switchCount;
+            document.getElementById('acct-tested').textContent = testedOnCurrentAccount;
+        }
+
+        // Initial account display
+        refreshAccountDisplay();
+
+        function isRateLimitError(err) {
+            const msg = (err?.message || String(err)).toLowerCase();
+            return msg.includes('rate') || msg.includes('limit') ||
+                   msg.includes('quota') || msg.includes('exceeded') ||
+                   msg.includes('balance') || msg.includes('429') ||
+                   msg.includes('too many') || msg.includes('throttl');
+        }
+
+        async function switchAccountFlow(reason) {
+            return new Promise((resolve) => {
+                switchResolve = resolve;
+                const overlay = document.createElement('div');
+                overlay.className = 'switch-overlay';
+                overlay.id = 'switch-overlay';
+                overlay.innerHTML = `
+                    <div class="switch-modal">
+                        <h2>⇄ Switch Puter Account</h2>
+                        <p>${reason}</p>
+                        <div class="stats-line">Tested ${testedOnCurrentAccount} models on current account · ${switchCount} switches so far</div>
+                        <p style="color:#a0aec0;font-size:0.65rem;">Steps:<br>
+                        1. Click "Sign Out" below<br>
+                        2. Sign in with a <strong style="color:var(--cyan)">different Puter account</strong><br>
+                        3. Click "Continue Testing"</p>
+                        <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-top:1rem;">
+                            <button class="btn danger" onclick="doSignOut()" id="signout-btn" style="padding:0.5rem 1.5rem;">① Sign Out</button>
+                            <button class="btn" onclick="doSignIn()" id="signin-btn" disabled style="padding:0.5rem 1.5rem;opacity:0.4;">② Sign In New</button>
+                            <button class="btn" onclick="doContinue()" id="continue-btn" disabled style="padding:0.5rem 1.5rem;opacity:0.4;border-color:#00f0af60;color:var(--green);">③ Continue Testing</button>
+                        </div>
+                        <div id="switch-status" style="margin-top:0.8rem;font-size:0.6rem;color:#4a5568;"></div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+            });
+        }
+
+        async function doSignOut() {
+            const status = document.getElementById('switch-status');
+            status.textContent = 'Signing out...';
+            try {
+                await puter.auth.signOut();
+                status.innerHTML = '<span style="color:var(--green)">✓ Signed out!</span> Now sign in with a new account.';
+                document.getElementById('signin-btn').disabled = false;
+                document.getElementById('signin-btn').style.opacity = '1';
+                document.getElementById('signout-btn').disabled = true;
+                document.getElementById('signout-btn').style.opacity = '0.3';
+                refreshAccountDisplay();
+            } catch (e) {
+                status.innerHTML = `<span style="color:var(--red)">Sign out error: ${e.message}</span>`;
+            }
+        }
+
+        async function doSignIn() {
+            const status = document.getElementById('switch-status');
+            status.textContent = 'Opening Puter sign-in...';
+            try {
+                await puter.auth.signIn();
+                status.innerHTML = '<span style="color:var(--green)">✓ Signed in!</span> Click Continue to resume testing.';
+                document.getElementById('continue-btn').disabled = false;
+                document.getElementById('continue-btn').style.opacity = '1';
+                document.getElementById('signin-btn').disabled = true;
+                document.getElementById('signin-btn').style.opacity = '0.3';
+                switchCount++;
+                testedOnCurrentAccount = 0;
+                refreshAccountDisplay();
+            } catch (e) {
+                status.innerHTML = `<span style="color:var(--red)">Sign in error: ${e.message}</span>`;
+            }
+        }
+
+        function doContinue() {
+            const overlay = document.getElementById('switch-overlay');
+            if (overlay) overlay.remove();
+            if (switchResolve) {
+                switchResolve();
+                switchResolve = null;
+            }
+        }
+
+        async function manualSwitchAccount() {
+            await switchAccountFlow('Manual account switch requested.');
+            refreshAccountDisplay();
+        }
+
+        // ── Providers / filters ───────────────────────────────────────────────
+        const providers = [...new Set(MODELS.map(m => m.provider))];
+        const filtersEl = document.getElementById('filters');
+        const allBtn = document.createElement('button');
+        allBtn.className = 'filter-btn active';
+        allBtn.textContent = `All (${MODELS.length})`;
+        allBtn.onclick = () => setFilter('all');
+        filtersEl.appendChild(allBtn);
+        providers.forEach(p => {
+            const count = MODELS.filter(m => m.provider === p).length;
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn';
+            btn.textContent = `${p} (${count})`;
+            btn.dataset.provider = p;
+            btn.onclick = () => setFilter(p);
+            filtersEl.appendChild(btn);
+        });
+
+        function setFilter(provider) {
+            activeFilter = provider;
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.toggle('active', provider === 'all' ? !b.dataset.provider : b.dataset.provider === provider);
+            });
+            document.querySelectorAll('.provider-section').forEach(sec => {
+                sec.classList.toggle('hidden', provider !== 'all' && sec.dataset.provider !== provider);
+            });
+        }
+
+        // ── Build cards ───────────────────────────────────────────────────────
+        const cardsEl = document.getElementById('cards');
+        const grouped = {};
+        MODELS.forEach(m => {
+            if (!grouped[m.provider]) grouped[m.provider] = [];
+            grouped[m.provider].push(m);
+        });
+
+        Object.entries(grouped).forEach(([provider, models]) => {
+            const section = document.createElement('div');
+            section.className = 'provider-section';
+            section.dataset.provider = provider;
+
+            const header = document.createElement('div');
+            header.className = 'section-header';
+            header.innerHTML = `<span>${provider}</span><span class="count">${models.length} models</span>`;
+            section.appendChild(header);
+
+            models.forEach(m => {
+                const card = document.createElement('div');
+                card.className = 'model-card';
+                card.id = `card-${safeId(m.id)}`;
+                card.innerHTML = `
+                    <div class="status-dot" id="dot-${safeId(m.id)}"></div>
+                    <div class="model-name" title="${m.name}">${m.name}</div>
+                    <div class="model-id" title="${m.id}">${m.id}</div>
+                    <div class="model-result" id="result-${safeId(m.id)}">Waiting...</div>
+                    <div class="latency" id="latency-${safeId(m.id)}"></div>
+                `;
+                section.appendChild(card);
+            });
+
+            cardsEl.appendChild(section);
+        });
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+        function safeId(id) { return id.replace(/[^\w]/g, '_'); }
+
+        function classifyLatency(ms) {
+            if (ms < 3000) return 'fast';
+            if (ms < 8000) return 'medium';
+            return 'slow';
+        }
+
+        function scoreAccuracy(text, testType) {
+            if (!text) return 0;
+            if (testType === 'basic') {
+                const words = text.trim().split(/\s+/);
+                // Score: did they reply at all (50%) + ~5 words (50%)
+                let s = 50;
+                if (words.length >= 3 && words.length <= 8) s += 50;
+                else if (words.length > 0) s += 25;
+                return s;
+            } else {
+                let s = 0;
+                if (text.includes('<!DOCTYPE html>') || text.includes('<!doctype html>')) s += 20;
+                if (text.includes('<canvas')) s += 20;
+                if (text.includes('requestAnimationFrame')) s += 20;
+                if (text.includes('</html>')) s += 15;
+                if (text.includes('fillStyle') || text.includes('arc(') || text.includes('fill()')) s += 15;
+                if (!text.includes('```')) s += 10; // No markdown leakage
+                return Math.min(100, s);
+            }
+        }
+
+        // ── Sleep helper ──────────────────────────────────────────────────────
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+        // ── Extract text from AI response ─────────────────────────────────────
+        function extractText(resp) {
+            if (!resp) return '';
+            if (typeof resp === 'string') return resp;
+            if (resp?.message?.content) {
+                if (Array.isArray(resp.message.content)) {
+                    return resp.message.content.map(c => c.text || c.content || '').join('');
+                }
+                return resp.message.content;
+            }
+            if (resp?.text) return resp.text;
+            return JSON.stringify(resp).slice(0, 200);
+        }
+
+        // ── Test single model (with retry + backoff) ──────────────────────────
+        async function testModel(model, testType) {
+            const sid = safeId(model.id);
+            const dot = document.getElementById(`dot-${sid}`);
+            const result = document.getElementById(`result-${sid}`);
+            const latency = document.getElementById(`latency-${sid}`);
+            const card = document.getElementById(`card-${sid}`);
+
+            dot.className = 'status-dot testing';
+            card.className = 'model-card testing';
+            result.textContent = 'Testing...';
+            result.className = 'model-result';
+
+            const forceFree = document.getElementById('force-free').checked;
+            const testModelId = (forceFree && !model.id.includes(':free')) ? model.id + ':free' : model.id;
+            const isFreeModel = testModelId.includes(':free');
+
+            const prompt = testType === 'basic' ? TEST_BASIC : TEST_SIM;
+            const maxRetries = 3;
+
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                if (attempt > 0) {
+                    const backoff = Math.min(2000 * Math.pow(2, attempt), 15000);
+                    result.textContent = `Retry ${attempt}/${maxRetries-1} in ${(backoff/1000).toFixed(0)}s...`;
+                    await sleep(backoff);
+                }
+
+                const start = Date.now();
+                try {
+                    // Try with different strategies
+                    let resp;
+
+                    if (attempt === 0) {
+                        // First attempt: normal call
+                        resp = await puter.ai.chat(prompt, { model: testModelId });
+                    } else if (attempt === 1 && !isFreeModel) {
+                        // Second attempt: try testMode
+                        resp = await puter.ai.chat(prompt, true, { model: testModelId });
+                    } else {
+                        // Third attempt: try with testMode flag in options
+                        resp = await puter.ai.chat(prompt, { model: testModelId, testMode: true });
+                    }
+
+                    const ms = Date.now() - start;
+                    const text = extractText(resp);
+                    const accuracy = scoreAccuracy(text, testType);
+
+                    dot.className = 'status-dot ok';
+                    card.className = 'model-card ok';
+                    result.className = 'model-result ok';
+                    const retryTag = attempt > 0 ? ` [r${attempt}]` : '';
+                    result.textContent = `✓ [${accuracy}%]${retryTag} ${text.trim().slice(0, 75)}`;
+                    latency.textContent = `${ms}ms`;
+                    latency.className = `latency ${classifyLatency(ms)}`;
+
+                    const nameEl = card.querySelector('.model-name');
+                    if (forceFree && !nameEl.textContent.startsWith('🆓')) {
+                        const cleanName = nameEl.textContent.replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]\s*/g, '').replace(/^[^\w\s]\s*/, '');
+                        nameEl.textContent = `🆓 ` + cleanName;
+                        nameEl.style.color = 'var(--green)';
+                    }
+
+                    return { ok: true, model, ms, accuracy, text: text.trim().slice(0, 200), retries: attempt };
+                } catch (err) {
+                    const ms = Date.now() - start;
+                    const errMsg = err?.message || String(err);
+                    const isRetryable = isRateLimitError({ message: errMsg }) && !forceFree; // Skip retry on limits if forceFree as we just want check
+
+                    // If it's a rate limit and we have retries left, continue
+                    if (isRetryable && attempt < maxRetries - 1) {
+                        result.textContent = `⚠ Rate limited, retrying...`;
+                        continue;
+                    }
+
+                    // Final failure
+                    dot.className = 'status-dot fail';
+                    card.className = 'model-card fail';
+                    result.className = 'model-result fail';
+                    result.textContent = `✗ ${errMsg}`;
+                    latency.textContent = `${ms}ms`;
+                    latency.className = 'latency';
+
+                    const nameEl = card.querySelector('.model-name');
+                    if (forceFree && !nameEl.textContent.startsWith('💲')) {
+                         const cleanName = nameEl.textContent.replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]\s*/g, '').replace(/^[^\w\s]\s*/, '');
+                         nameEl.textContent = `💲 ` + cleanName;
+                         nameEl.style.color = 'var(--red)';
+                    }
+
+                    return { ok: false, model, ms, accuracy: 0, err: errMsg, retries: attempt };
+                }
+            }
+        }
+
+        // ── Run all (free-first + delay + auto-retry + account rotation) ─────
+        async function runAllTests() {
+            const btn = document.getElementById('run-btn');
+            const stopBtn = document.getElementById('stop-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const progressFill = document.getElementById('progress-fill');
+            const testType = document.getElementById('test-type').value;
+            const batchSize = parseInt(document.getElementById('batch-size').value);
+            const delayMs = parseInt(document.getElementById('delay-ms').value);
+            const freeFirst = document.getElementById('free-first').checked;
+            const forceFree = document.getElementById('force-free').checked;
+
+            btn.disabled = true;
+            stopBtn.disabled = false;
+            exportBtn.disabled = true;
+            aborted = false;
+            allResults = [];
+            testedOnCurrentAccount = 0;
+            btn.textContent = '⏳ Running...';
+
+            // Determine which models to test based on active filter
+            let modelsToTest = activeFilter === 'all'
+                ? [...MODELS]
+                : MODELS.filter(m => m.provider === activeFilter);
+
+            // Sort: free models first if enabled
+            if (freeFirst) {
+                modelsToTest.sort((a, b) => {
+                    const aFree = a.id.includes(':free') ? 0 : 1;
+                    const bFree = b.id.includes(':free') ? 0 : 1;
+                    return aFree - bFree;
+                });
+            }
+
+            // Reset all cards being tested
+            modelsToTest.forEach(m => {
+                const sid = safeId(m.id);
+                document.getElementById(`dot-${sid}`).className = 'status-dot';
+                document.getElementById(`result-${sid}`).textContent = 'Queued...';
+                document.getElementById(`result-${sid}`).className = 'model-result';
+                document.getElementById(`latency-${sid}`).textContent = '';
+                document.getElementById(`latency-${sid}`).className = 'latency';
+                document.getElementById(`card-${sid}`).className = 'model-card';
+            });
+
+            let consecutiveRateLimits = 0;
+
+            for (let i = 0; i < modelsToTest.length; i++) {
+                if (aborted) break;
+
+                // Check if we need to rotate accounts (batch limit reached, ignored if forcing free test)
+                if (!forceFree && batchSize < 999 && testedOnCurrentAccount >= batchSize) {
+                    btn.textContent = `⇄ Switching... (${i}/${modelsToTest.length})`;
+                    await switchAccountFlow(
+                        `Batch limit reached: <strong>${batchSize} models</strong> tested on this account.<br>Switch to a new Puter account to continue.`
+                    );
+                    consecutiveRateLimits = 0;
+                    btn.textContent = '⏳ Running...';
+                }
+
+                // Cooldown delay between requests
+                if (delayMs > 0 && i > 0) {
+                    btn.textContent = `⏳ Cooldown ${(delayMs/1000).toFixed(0)}s... (${i}/${modelsToTest.length})`;
+                    await sleep(delayMs);
+                    btn.textContent = '⏳ Running...';
+                }
+
+                const r = await testModel(modelsToTest[i], testType);
+                allResults.push(r);
+                testedOnCurrentAccount++;
+                refreshAccountDisplay();
+                progressFill.style.width = `${((i + 1) / modelsToTest.length) * 100}%`;
+
+                // Check for rate limit errors after retries exhausted - trigger account switch
+                if (!forceFree && !r.ok && isRateLimitError({ message: r.err })) {
+                    consecutiveRateLimits++;
+                    if (consecutiveRateLimits >= 2) {
+                        btn.textContent = `⚠ Rate limited! Switch... (${i+1}/${modelsToTest.length})`;
+                        await switchAccountFlow(
+                            `⚠️ <strong>Rate limit persists after retries!</strong><br>Error: "${(r.err || '').slice(0, 100)}"<br><br>Switch to a new Puter account to continue.`
+                        );
+                        consecutiveRateLimits = 0;
+                        i--;
+                        allResults.pop();
+                        btn.textContent = '⏳ Running...';
+                    }
+                } else {
+                    consecutiveRateLimits = 0;
+                }
+            }
+
+            showSummary(allResults, testType);
+
+            btn.disabled = false;
+            stopBtn.disabled = true;
+            exportBtn.disabled = false;
+            btn.textContent = '↺ Run Again';
+            if (!aborted) progressFill.style.width = '100%';
+        }
+
+        function stopTests() {
+            aborted = true;
+            document.getElementById('stop-btn').disabled = true;
+        }
+
+        // ── Run only free models ──────────────────────────────────────────────
+        async function runFreeOnly() {
+            // Set filter to 'Free' provider and trigger run
+            setFilter('Free');
+            // Short delay to let UI update
+            await sleep(100);
+            runAllTests();
+        }
+
+        // ── Summary ───────────────────────────────────────────────────────────
+        function showSummary(results, testType) {
+            const summary = document.getElementById('summary');
+            summary.style.display = 'block';
+
+            const passed = results.filter(r => r.ok);
+            const failed = results.filter(r => !r.ok);
+            const avgMs = passed.length ? Math.round(passed.reduce((s, r) => s + r.ms, 0) / passed.length) : 0;
+            const avgAccuracy = passed.length ? Math.round(passed.reduce((s, r) => s + r.accuracy, 0) / passed.length) : 0;
+            const fastest = passed.length ? passed.reduce((a, b) => a.ms < b.ms ? a : b) : null;
+            const mostAccurate = passed.length ? passed.reduce((a, b) => a.accuracy > b.accuracy ? a : b) : null;
+
+            // Rank by combined score (accuracy * 0.6 + speed * 0.4)
+            const maxMs = passed.length ? Math.max(...passed.map(r => r.ms)) : 1;
+            const ranked = [...passed].map(r => ({
+                ...r,
+                speedScore: Math.round((1 - r.ms / maxMs) * 100),
+                combined: Math.round(r.accuracy * 0.6 + (1 - r.ms / maxMs) * 100 * 0.4)
+            })).sort((a, b) => b.combined - a.combined);
+
+            let rankRows = ranked.slice(0, 20).map((r, i) => {
+                const badgeClass = i < 3 ? `rank-badge rank-${i + 1}` : 'rank-badge';
+                const badgeStyle = i >= 3 ? `style="background:#1a1a2e;color:#4a5568;"` : '';
+                const accColor = r.accuracy >= 80 ? 'var(--green)' : r.accuracy >= 50 ? 'var(--amber)' : 'var(--red)';
+                const accWidth = (r.accuracy / 100) * 60;
+                return `<tr>
+                    <td><span class="${badgeClass}" ${badgeStyle}>${i + 1}</span></td>
+                    <td>${r.model.name}</td>
+                    <td style="color:${accColor}">${r.accuracy}%
+                        <span class="accuracy-bar"><span class="fill" style="width:${accWidth}px;background:${accColor}"></span></span>
+                    </td>
+                    <td class="latency ${classifyLatency(r.ms)}">${r.ms}ms</td>
+                    <td>${r.speedScore}</td>
+                    <td style="color:var(--cyan);font-weight:700">${r.combined}</td>
+                </tr>`;
+            }).join('');
+
+            summary.innerHTML = `
+                <strong style="color:var(--cyan);font-size:0.85rem;">⚗ Test Complete – ${testType === 'basic' ? 'Basic Ping' : 'Simulation Accuracy'}</strong>
+                ${aborted ? '<span style="color:var(--amber);margin-left:8px;">(Stopped early)</span>' : ''}
+                <div class="stats-grid">
+                    <div class="stat-box"><div class="val" style="color:var(--green)">${passed.length}</div><div class="label">Passed</div></div>
+                    <div class="stat-box"><div class="val" style="color:var(--red)">${failed.length}</div><div class="label">Failed</div></div>
+                    <div class="stat-box"><div class="val">${avgMs}ms</div><div class="label">Avg Latency</div></div>
+                    <div class="stat-box"><div class="val">${avgAccuracy}%</div><div class="label">Avg Accuracy</div></div>
+                    <div class="stat-box"><div class="val" style="color:var(--green);font-size:0.9rem">${fastest ? fastest.model.name : '—'}</div><div class="label">⚡ Fastest (${fastest ? fastest.ms + 'ms' : '—'})</div></div>
+                    <div class="stat-box"><div class="val" style="color:var(--magenta);font-size:0.9rem">${mostAccurate ? mostAccurate.model.name : '—'}</div><div class="label">🎯 Most Accurate (${mostAccurate ? mostAccurate.accuracy + '%' : '—'})</div></div>
+                </div>
+                ${ranked.length > 0 ? `
+                <div style="margin-top:1.2rem;">
+                    <div style="font-size:0.7rem;color:var(--cyan);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem;">🏆 Simulation Readiness Ranking <span style="color:#4a5568">(60% Accuracy + 40% Speed)</span></div>
+                    <table class="ranking-table">
+                        <tr><th>#</th><th>Model</th><th>Accuracy</th><th>Latency</th><th>Speed</th><th>Score</th></tr>
+                        ${rankRows}
+                    </table>
+                </div>
+                ` : ''}
+                ${failed.length > 0 ? `
+                    <div style="margin-top:0.8rem;padding:0.5rem;background:#f04a6008;border:1px solid #f04a6020;border-radius:6px;font-size:0.65rem;color:var(--red);">
+                        ❌ Failed: ${failed.map(r => r.model.name).join(', ')}
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // ── Export CSV ─────────────────────────────────────────────────────────
+        function exportResults() {
+            if (!allResults.length) return;
+            const header = 'Rank,Model,Provider,ID,Status,Latency(ms),Accuracy(%),Response\n';
+            const maxMs = Math.max(...allResults.filter(r => r.ok).map(r => r.ms), 1);
+            const sorted = [...allResults].sort((a, b) => {
+                const sa = a.ok ? a.accuracy * 0.6 + (1 - a.ms / maxMs) * 100 * 0.4 : -1;
+                const sb = b.ok ? b.accuracy * 0.6 + (1 - b.ms / maxMs) * 100 * 0.4 : -1;
+                return sb - sa;
+            });
+            const rows = sorted.map((r, i) =>
+                `${i + 1},"${r.model.name}","${r.model.provider}","${r.model.id}",${r.ok ? 'PASS' : 'FAIL'},${r.ms},${r.accuracy},"${(r.text || r.err || '').replace(/"/g, '""').slice(0, 100)}"`
+            ).join('\n');
+
+            const blob = new Blob([header + rows], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vizulab-model-test-${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
